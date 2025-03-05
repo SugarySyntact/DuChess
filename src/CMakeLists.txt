@@ -1,6 +1,12 @@
-add_executable(duchess main.cpp)
-
-set_target_properties(duchess
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+add_library(duchess
+    types.cpp
 )
+
+target_include_directories(duchess
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_executable(chess main.cpp)
