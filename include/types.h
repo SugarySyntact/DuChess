@@ -19,6 +19,8 @@ enum class Piece : uint8_t {
     WHITE_KING = 6,     BLACK_KING = 14
 };
 
+using Bitboard = uint64_t;
+
 enum class Square : uint8_t {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,

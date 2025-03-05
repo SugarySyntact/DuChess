@@ -1,5 +1,6 @@
 add_library(duchess
     types.cpp
+    bitboard.cpp
 )
 
 target_include_directories(duchess
