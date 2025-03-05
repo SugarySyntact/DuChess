@@ -11,3 +11,5 @@ target_include_directories(duchess
 )
 
 add_executable(duchess-app main.cpp)
+
+target_link_libraries(duchess-app PRIVATE duchess)

@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
     googletest
-    URL https://github.com/google/googletest/archive/v1.13.0.zip
+    URL https://github.com/google/googletest/archive/v1.16.0.zip
 )
 # For Windows (ewww)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
