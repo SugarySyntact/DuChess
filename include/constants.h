@@ -6,7 +6,7 @@ namespace Chess::Constants {
 constexpr int PIECE_COLOR_OFFSET = 8;
 
 constexpr unsigned int DEBRUIJN_SHIFT = 58;
-constexpr unsigned int MSB_RSHIFT_COUNT = 5;
+constexpr unsigned int MSB_RSHIFT_COUNT = 6;
 
 constexpr int BASE_16_HEX = 16;
 

@@ -36,38 +36,32 @@ inline auto testBit(Bitboard bitb, Square square) -> bool
 {
     return (bitb & (1ULL << static_cast<unsigned>(square))) != 0;
 };
-
 inline auto setBit(Bitboard& bitb, Square square) -> void
 {
     bitb |= (1ULL << static_cast<unsigned>(square));
 }
-
 inline auto clearBit(Bitboard& bitb, Square square) -> void
 {
     bitb &= ~(1ULL << static_cast<unsigned>(square));
 }
-
 inline auto square(Square square) -> Bitboard { return 1ULL << static_cast<unsigned>(square); }
 
 inline auto northOne(Bitboard bitb) -> Bitboard
 {
     return bitb << static_cast<unsigned>(Constants::Board::LENGTH);
 }
-
 inline auto southOne(Bitboard bitb) -> Bitboard
 {
     return bitb >> static_cast<unsigned>(Constants::Board::LENGTH);
 }
-
 inline auto eastOne(Bitboard bitb) -> Bitboard { return (bitb << 1ULL) & ~Bitboards::files.at(0); }
-
 inline auto westOne(Bitboard bitb) -> Bitboard
 {
     return (bitb >> 1ULL) & ~Bitboards::files.at(Constants::Board::LENGTH - 1);
 }
 
 inline auto northEastOne(Bitboard bitb) -> Bitboard { return northOne(eastOne(bitb)); }
-inline auto nothWestOne(Bitboard bitb) -> Bitboard { return northOne(westOne(bitb)); }
+inline auto northWestOne(Bitboard bitb) -> Bitboard { return northOne(westOne(bitb)); }
 inline auto southEastOne(Bitboard bitb) -> Bitboard { return southOne(eastOne(bitb)); }
 inline auto southWestOne(Bitboard bitb) -> Bitboard { return southOne(westOne(bitb)); }
 

@@ -11,6 +11,13 @@ namespace Chess {
 
 using namespace Util;
 
+std::array<Bitboard, Constants::Board::LENGTH> Bitboards::files;
+std::array<Bitboard, Constants::Board::LENGTH> Bitboards::ranks;
+std::array<Bitboard, Constants::Board::DIAGONAL_COUNT> Bitboards::diagonals;
+std::array<Bitboard, Constants::Board::DIAGONAL_COUNT> Bitboards::anti_diagonals;
+std::array<Bitboard, Constants::Board::SQUARE_COUNT> Bitboards::squares;
+std::array<int, Constants::Board::SQUARE_COUNT> Bitboards::debruijn_lut;
+
 auto Bitboards::init() -> void
 {
     for (int file = 0; file < Constants::Board::LENGTH; ++file) {
@@ -31,10 +38,10 @@ auto Bitboards::init() -> void
 
     for (int i = 0; i < Constants::Board::DIAGONAL_COUNT; ++i) {
         diagonals.at(i) = 0ULL;
-        int diag = i - Constants::Board::DIAGONAL_CENTER;
+        const int DIAG = i - Constants::Board::DIAGONAL_CENTER;
         UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
-            const int RANK = file - diag;
+            const int RANK = file - DIAG;
             if (RANK >= 0 && RANK < Constants::Board::LENGTH) {
                 setBit(diagonals.at(i), makeSquare(file, RANK));
             }
@@ -86,6 +93,7 @@ auto Bitboards::msb(Bitboard bitb) -> Square
 
     UNROLL_LOOP
     for (unsigned int i = 0; i < Constants::MSB_RSHIFT_COUNT; ++i) { bitb |= bitb >> (1U << i); }
+    bitb &= ~(bitb >> 1ULL);
 
     return static_cast<Square>(
         debruijn_lut.at((bitb * DEBRUIJN_CONSTANT) >> Constants::DEBRUIJN_SHIFT));
@@ -114,18 +122,23 @@ auto Bitboards::popLsb(Bitboard& bitb) -> Bitboard
 
 void Bitboards::print(Bitboard bitb)
 {
+    constexpr int MAX_RANK = Constants::Board::LENGTH - 1;
     std::cout << "+---+---+---+---+---+---+---+---+\n";
-    for (int rank = Constants::Board::LENGTH - 1; rank >= 0; --rank) {
+
+    // Use reverse rank (r_rank) to silence `-altera-id-dependent-backward-branch`
+    for (int r_rank = 0; r_rank < Constants::Board::LENGTH; ++r_rank) {
+        const int RANK = MAX_RANK - r_rank;
+
         std::cout << "| ";
         UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
-            const Square SQUARE = makeSquare(file, rank);
+            const Square SQUARE = makeSquare(file, RANK);
             if (testBit(bitb, SQUARE)) { std::cout << "X | "; }
             else {
                 std::cout << "  | ";
             }
         }
-        std::cout << rank + 1 << "\n";
+        std::cout << RANK + 1 << "\n";
         std::cout << "+---+---+---+---+---+---+---+---+\n";
     }
     std::cout << "  a   b   c   d   e   f   g   h\n";
