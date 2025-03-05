@@ -1,7 +1,5 @@
 #include "types.h"
 
-#include <stdexcept>
-
 #include "constants.h"
 
 namespace Chess::Util {

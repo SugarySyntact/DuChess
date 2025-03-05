@@ -9,4 +9,4 @@ target_include_directories(duchess
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_executable(chess main.cpp)
+add_executable(duchess-app main.cpp)
