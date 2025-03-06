@@ -20,14 +20,14 @@ protected:
 // Test FEN parsing and conversion
 TEST_F(PositionTest, FENConversion)
 {
-    std::vector<std::string> fens = {
+    const std::vector<std::string> FENS = {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",             // Starting position
         "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", // Position 2
         "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",                            // Position 3
         "r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",     // Sicilian defense
     };
 
-    for (const auto& fen : fens) {
+    for (const auto& fen : FENS) {
         Position pos(fen);
         EXPECT_EQ(fen, pos.toFen());
     }
@@ -36,10 +36,10 @@ TEST_F(PositionTest, FENConversion)
 // Test position hash uniqueness for different positions
 TEST_F(PositionTest, HashUniqueness)
 {
-    std::unordered_set<uint64_t> hashes;
+    std::unordered_set<HashKey> hashes;
 
     // Create several distinct positions
-    std::vector<std::string> fens = {
+    const std::vector<std::string> FENS = {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",         // Starting position
         "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",      // After 1. e4
         "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",    // After 1...c5
@@ -47,9 +47,9 @@ TEST_F(PositionTest, HashUniqueness)
         "r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", // After 2...Nc6
     };
 
-    for (const auto& fen : fens) {
+    for (const auto& fen : FENS) {
         Position pos(fen);
-        uint64_t hash = pos.hash();
+        HashKey hash = pos.hash();
 
         // Each position should have a unique hash
         EXPECT_EQ(hashes.end(), hashes.find(hash));
@@ -60,45 +60,45 @@ TEST_F(PositionTest, HashUniqueness)
 // Test that positions differing only in irrelevant details have different hashes
 TEST_F(PositionTest, HashRelevantDifferences)
 {
-    Position pos1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     // Same position but black to move
-    Position pos2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1");
-    EXPECT_NE(pos1.hash(), pos2.hash());
+    const Position POS2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1");
+    EXPECT_NE(POS1.hash(), POS2.hash());
 
     // Same position but no castling rights
-    Position pos3("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-    EXPECT_NE(pos1.hash(), pos3.hash());
+    const Position POS3("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+    EXPECT_NE(POS1.hash(), POS3.hash());
 
     // Same position but with en passant square
-    Position pos4("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
-    EXPECT_NE(pos1.hash(), pos4.hash());
+    const Position POS4("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    EXPECT_NE(POS1.hash(), POS4.hash());
 }
 
 // Test position equality
 TEST_F(PositionTest, PositionEquality)
 {
-    Position pos1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    Position pos2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    Position pos3("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    const Position POS2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    const Position POS3("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
 
     // Same positions should be equal
-    EXPECT_EQ(pos1, pos2);
+    EXPECT_EQ(POS1, POS2);
 
     // Different positions should not be equal
-    EXPECT_NE(pos1, pos3);
+    EXPECT_NE(POS1, POS3);
 }
 
 // Test that irrelevant FEN differences don't affect position equality
 TEST_F(PositionTest, IrrelevantFENDifferences)
 {
     // Different move counters shouldn't affect equality check (for now)
-    Position pos1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    Position pos2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 10 20");
+    const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    const Position POS2("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 10 20");
 
     // Positions should still be considered the same
-    EXPECT_EQ(pos1.hash(), pos2.hash());
-    EXPECT_EQ(pos1, pos2);
+    EXPECT_EQ(POS1.hash(), POS2.hash());
+    EXPECT_EQ(POS1, POS2);
 }
 
 // Test position creation from starting position

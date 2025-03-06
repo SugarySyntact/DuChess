@@ -2,6 +2,7 @@
 
 #include "bitboard.h"
 #include "constants.h"
+#include "types.h"
 
 using namespace Chess;
 using namespace Util;
@@ -72,10 +73,10 @@ TEST_F(BitboardTest, PopCount)
     EXPECT_EQ(Bitboards::popCount(1ULL << TEST_H8), 1);
 
     // Multiple bits
-    Bitboard multiple = (1ULL << static_cast<unsigned>(Square::A1)) |
-                        (1ULL << static_cast<unsigned>(Square::E4)) |
-                        (1ULL << static_cast<unsigned>(Square::H8));
-    EXPECT_EQ(Bitboards::popCount(multiple), 3);
+    const Bitboard MULTIPLE = (1ULL << static_cast<unsigned>(Square::A1)) |
+                              (1ULL << static_cast<unsigned>(Square::E4)) |
+                              (1ULL << static_cast<unsigned>(Square::H8));
+    EXPECT_EQ(Bitboards::popCount(MULTIPLE), 3);
 
     // Full bitboard
     EXPECT_EQ(Bitboards::popCount(~0ULL), 64);

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "constants.h"
 #include "types.h"
 
 using namespace Chess;
@@ -71,6 +72,39 @@ TEST(TypesTest, MakePiece)
     EXPECT_EQ(Util::makePiece(PieceType::NONE, Color::WHITE), Piece::NONE);
 }
 
+TEST(TypesTest, SquareConversion)
+{
+    // Test specific squares
+    EXPECT_EQ(Util::squareToString(Square::A1), "a1");
+    EXPECT_EQ(Util::squareToString(Square::H1), "h1");
+    EXPECT_EQ(Util::squareToString(Square::A8), "a8");
+    EXPECT_EQ(Util::squareToString(Square::H8), "h8");
+    EXPECT_EQ(Util::squareToString(Square::E4), "e4");
+
+    // Test string to square
+    EXPECT_EQ(Util::stringToSquare("a1"), Square::A1);
+    EXPECT_EQ(Util::stringToSquare("h1"), Square::H1);
+    EXPECT_EQ(Util::stringToSquare("a8"), Square::A8);
+    EXPECT_EQ(Util::stringToSquare("h8"), Square::H8);
+    EXPECT_EQ(Util::stringToSquare("e4"), Square::E4);
+
+    // Test NONE
+    EXPECT_EQ(Util::squareToString(Square::NONE), "-");
+    EXPECT_EQ(Util::stringToSquare("-"), Square::NONE);
+
+    // Test round-trip
+    for (int sq = 0; sq < Constants::Board::SQUARE_COUNT; ++sq) {
+        auto square = static_cast<Square>(sq);
+        EXPECT_EQ(Util::stringToSquare(Util::squareToString(square)), square);
+    }
+
+    // Test invalid inputs
+    EXPECT_THROW(Util::stringToSquare("i1"), std::invalid_argument);
+    EXPECT_THROW(Util::stringToSquare("a9"), std::invalid_argument);
+    EXPECT_THROW(Util::stringToSquare("a"), std::invalid_argument);
+    EXPECT_THROW(Util::stringToSquare("abc"), std::invalid_argument);
+}
+
 TEST(TypesTest, FileAndRank)
 {
     // Test file calculations
@@ -103,4 +137,38 @@ TEST(TypesTest, FileAndRank)
     // Test edge cases
     EXPECT_EQ(Util::getFile(Square::NONE), -1);
     EXPECT_EQ(Util::getRank(Square::NONE), -1);
+}
+
+TEST(TypesTest, PieceToChar)
+{
+    // Test white pieces
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_PAWN), 'P');
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_KNIGHT), 'N');
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_BISHOP), 'B');
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_ROOK), 'R');
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_QUEEN), 'Q');
+    EXPECT_EQ(Util::pieceToChar(Piece::WHITE_KING), 'K');
+
+    // Test black pieces
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_PAWN), 'p');
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_KNIGHT), 'n');
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_BISHOP), 'b');
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_ROOK), 'r');
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_QUEEN), 'q');
+    EXPECT_EQ(Util::pieceToChar(Piece::BLACK_KING), 'k');
+
+    // Test NONE
+    EXPECT_EQ(Util::pieceToChar(Piece::NONE), '.');
+
+    // Test roundtrip conversion
+    for (int piece = 0; piece <= static_cast<int>(Piece::BLACK_KING); ++piece) {
+        // Skip invalid piece values
+        if (piece > static_cast<int>(Piece::WHITE_KING) &&
+            piece < static_cast<int>(Piece::BLACK_PAWN)) {
+            continue;
+        }
+
+        auto piece_cpy = static_cast<Piece>(piece);
+        EXPECT_EQ(Util::charToPiece(Util::pieceToChar(piece_cpy)), piece_cpy);
+    }
 }
