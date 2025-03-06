@@ -16,8 +16,9 @@ using namespace Util;
 Position::Position() : Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {}
 
 Position::Position(const std::string& fen)
-    : m_piece_bitboards(), m_color_bitboards(), m_pieces(), m_castling_rights(),
-      m_position_hash(computeHash())
+    : m_piece_bitboards(), m_color_bitboards(), m_pieces(), m_side_to_move(Color::WHITE),
+      m_castling_rights(), m_en_passant_square(Square::NONE), m_halfmove_clock(0),
+      m_fullmove_number(1)
 {
     std::istringstream iss(fen);
     std::string token;
@@ -38,16 +39,22 @@ Position::Position(const std::string& fen)
         else {
             Piece piece = charToPiece(chr);
             Square square = makeSquare(file, rank);
-            m_pieces.at(static_cast<int>(square)) = piece;
 
-            // Update bitboards
-            Color color = getPieceColor(piece);
-            PieceType type = getPieceType(piece);
-            Bitboard square_bit = squareBB(square);
-            m_piece_bitboards.at(static_cast<int>(color)).at(static_cast<int>(type) - 1) |=
-                square_bit;
-            m_color_bitboards.at(static_cast<int>(color)) |= square_bit;
+            if (square != Square::NONE &&
+                static_cast<int>(square) < Constants::Board::SQUARE_COUNT) {
+                m_pieces.at(static_cast<int>(square)) = piece;
 
+                // Update bitboards
+                Color color = getPieceColor(piece);
+                PieceType type = getPieceType(piece);
+
+                if (color != Color::NONE && type != PieceType::NONE) {
+                    Bitboard square_bit = squareBB(square);
+                    m_piece_bitboards.at(static_cast<int>(color)).at(static_cast<int>(type) - 1) |=
+                        square_bit;
+                    m_color_bitboards.at(static_cast<int>(color)) |= square_bit;
+                }
+            }
             ++file;
         }
     }
@@ -72,24 +79,38 @@ Position::Position(const std::string& fen)
             case 'q':
                 m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_QUEENSIDE);
                 break;
-            case '-':
-                // No castling rights
-                break;
-            default: throw std::invalid_argument("Invalid castling rights in FEN: " + token);
+            default: break;
         }
     }
 
     // 4. En passant target square
     iss >> token;
-    m_en_passant_square = (token == "-") ? Square::NONE : stringToSquare(token);
+    try {
+        m_en_passant_square = (token == "-") ? Square::NONE : stringToSquare(token);
+    }
+    catch (const std::invalid_argument&) {
+        m_en_passant_square = Square::NONE;
+    }
 
     // 5. Halfmove clock
     iss >> token;
-    m_halfmove_clock = std::stoi(token);
+    try {
+        m_halfmove_clock = std::stoi(token);
+    }
+    catch (const std::invalid_argument&) {
+        m_halfmove_clock = 0;
+    }
 
     // 6. Fullmove number
     iss >> token;
-    m_fullmove_number = std::stoi(token);
+    try {
+        m_fullmove_number = std::stoi(token);
+    }
+    catch (const std::invalid_argument&) {
+        m_fullmove_number = 1;
+    }
+
+    m_position_hash = computeHash();
 }
 
 auto Position::pieceAt(Square square) const -> Piece
@@ -228,9 +249,7 @@ auto Position::operator==(const Position& other) const -> bool
 
     return m_side_to_move == other.m_side_to_move && /* clang-format */
            m_castling_rights == other.m_castling_rights &&
-           m_en_passant_square == other.m_en_passant_square &&
-           m_halfmove_clock == other.m_halfmove_clock &&
-           m_fullmove_number == other.m_fullmove_number;
+           m_en_passant_square == other.m_en_passant_square;
 }
 
 auto Position::operator!=(const Position& other) const -> bool { return !(*this == other); }
@@ -254,9 +273,10 @@ auto Position::computeHash() const -> HashKey
     hash ^= Zobrist::getCastlingKey(m_castling_rights);
 
     // 4. En passant square
-    hash ^= Zobrist::getEnPassantKey(m_en_passant_square);
+    if (m_en_passant_square != Square::NONE) {
+        hash ^= Zobrist::getEnPassantKey(m_en_passant_square);
+    }
 
     return hash;
 }
-
 } // namespace Chess
