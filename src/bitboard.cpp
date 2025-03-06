@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "compiler_macros.h"
 #include "constants.h"
 #include "types.h"
 
@@ -22,7 +21,6 @@ auto Bitboards::init() -> void
 {
     for (int file = 0; file < Constants::Board::LENGTH; ++file) {
         files.at(file) = 0ULL;
-        UNROLL_LOOP
         for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
             setBit(files.at(file), makeSquare(file, rank));
         }
@@ -30,7 +28,6 @@ auto Bitboards::init() -> void
 
     for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
         ranks.at(rank) = 0ULL;
-        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             setBit(ranks.at(rank), makeSquare(file, rank));
         }
@@ -39,7 +36,6 @@ auto Bitboards::init() -> void
     for (int i = 0; i < Constants::Board::DIAGONAL_COUNT; ++i) {
         diagonals.at(i) = 0ULL;
         const int DIAG = i - Constants::Board::DIAGONAL_CENTER;
-        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             const int RANK = file - DIAG;
             if (RANK >= 0 && RANK < Constants::Board::LENGTH) {
@@ -51,7 +47,6 @@ auto Bitboards::init() -> void
     for (int i = 0; i < Constants::Board::DIAGONAL_COUNT; ++i) {
         anti_diagonals.at(i) = 0ULL;
         const int DIAG = i - Constants::Board::DIAGONAL_CENTER;
-        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             const int RANK = Constants::Board::DIAGONAL_CENTER - file - DIAG;
             if (RANK >= 0 && RANK < Constants::Board::LENGTH) {
@@ -60,7 +55,6 @@ auto Bitboards::init() -> void
         }
     }
 
-    UNROLL_LOOP
     for (unsigned sq = 0; sq < Constants::Board::SQUARE_COUNT; ++sq) {
         squares.at(sq) = 1ULL << sq;
     }
@@ -91,7 +85,6 @@ auto Bitboards::msb(Bitboard bitb) -> Square
 {
     if (bitb == 0) { return Square::NONE; }
 
-    UNROLL_LOOP
     for (unsigned int i = 0; i < Constants::MSB_RSHIFT_COUNT; ++i) { bitb |= bitb >> (1U << i); }
     bitb &= ~(bitb >> 1ULL);
 
@@ -130,7 +123,6 @@ void Bitboards::print(Bitboard bitb)
         const int RANK = MAX_RANK - r_rank;
 
         std::cout << "| ";
-        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             const Square SQUARE = makeSquare(file, RANK);
             if (testBit(bitb, SQUARE)) { std::cout << "X | "; }

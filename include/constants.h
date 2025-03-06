@@ -21,6 +21,13 @@ constexpr int NO_SQUARE = -1;
 
 } // namespace Board
 
+namespace Zobrist {
+
+constexpr int PIECE_COUNT = 15;
+constexpr int CASTLING_COMBINATIONS = 16;
+
+} // namespace Zobrist
+
 } // namespace Chess::Constants
 
 #endif // CHESS_CONSTANTS_H

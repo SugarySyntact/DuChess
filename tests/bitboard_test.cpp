@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "bitboard.h"
-#include "compiler_macros.h"
 #include "constants.h"
 
 using namespace Chess;
@@ -107,7 +106,6 @@ TEST_F(BitboardTest, PredefinedBitboards)
     // Test file masks
     for (int file = 0; file < Constants::Board::LENGTH; ++file) {
         EXPECT_EQ(Bitboards::popCount(Bitboards::files.at(file)), 8);
-        UNROLL_LOOP
         for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
             EXPECT_TRUE(testBit(Bitboards::files.at(file), makeSquare(file, rank)));
         }
@@ -116,7 +114,6 @@ TEST_F(BitboardTest, PredefinedBitboards)
     // Test rank masks
     for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
         EXPECT_EQ(Bitboards::popCount(Bitboards::ranks.at(rank)), 8);
-        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             EXPECT_TRUE(testBit(Bitboards::ranks.at(rank), makeSquare(file, rank)));
         }

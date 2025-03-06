@@ -19,8 +19,6 @@ enum class Piece : uint8_t {
     WHITE_KING = 6,     BLACK_KING = 14
 };
 
-using Bitboard = uint64_t;
-
 enum class Square : uint8_t {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -33,6 +31,20 @@ enum class Square : uint8_t {
     NONE
 };
 // clang-format on
+
+enum class CastlingRight : uint8_t {
+    NONE = 0,
+    WHITE_KINGSIDE = 1,
+    WHITE_QUEENSIDE = 2,
+    BLACK_KINGSIDE = 4,
+    BLACK_QUEENSIDE = 8,
+    ALL = 15
+};
+
+using Bitboard = uint64_t;
+using HashKey = uint64_t;
+
+using CastlingRightsBitField = uint8_t;
 
 namespace Util {
 
