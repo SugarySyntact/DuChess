@@ -115,12 +115,11 @@ auto Bitboards::popLsb(Bitboard& bitb) -> Bitboard
 
 void Bitboards::print(Bitboard bitb)
 {
-    constexpr int MAX_RANK = Constants::Board::LENGTH - 1;
     std::cout << "+---+---+---+---+---+---+---+---+\n";
 
     // Use reverse rank (r_rank) to silence `-altera-id-dependent-backward-branch`
     for (int r_rank = 0; r_rank < Constants::Board::LENGTH; ++r_rank) {
-        const int RANK = MAX_RANK - r_rank;
+        const int RANK = Constants::Board::MAX_RANK - r_rank;
 
         std::cout << "| ";
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {

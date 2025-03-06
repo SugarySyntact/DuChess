@@ -15,6 +15,8 @@ namespace Board {
 constexpr int LENGTH = 8;
 constexpr int SQUARE_COUNT = LENGTH * LENGTH;
 constexpr int SQUARE_COUNT_WITH_EMPTY = SQUARE_COUNT + 1;
+constexpr int MAX_RANK = Constants::Board::LENGTH - 1;
+
 constexpr int DIAGONAL_COUNT = (2 * LENGTH) - 1;
 constexpr int DIAGONAL_CENTER = LENGTH - 1;
 

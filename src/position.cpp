@@ -1,5 +1,6 @@
 #include "position.h"
 
+#include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -17,99 +18,15 @@ Position::Position() : Position("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w K
 
 Position::Position(const std::string& fen)
     : m_piece_bitboards(), m_color_bitboards(), m_pieces(), m_side_to_move(Color::WHITE),
-      m_castling_rights(), m_en_passant_square(Square::NONE), m_halfmove_clock(0),
+      m_castling_rights(0), m_en_passant_square(Square::NONE), m_halfmove_clock(0),
       m_fullmove_number(1)
 {
     std::istringstream iss(fen);
-    std::string token;
 
-    // 1. Piece placement
-    iss >> token;
-    int file = 0;
-    int rank = Constants::Board::LENGTH - 1; // FEN starts from the 8th rank
+    parseFenPiecePlacement(iss);
+    parseFenGameState(iss);
 
-    for (char chr : token) {
-        if (chr == '/') {
-            file = 0;
-            --rank;
-        }
-        else if (chr >= '1' && chr <= '8') {
-            file += chr - '0';
-        }
-        else {
-            Piece piece = charToPiece(chr);
-            Square square = makeSquare(file, rank);
-
-            if (square != Square::NONE &&
-                static_cast<int>(square) < Constants::Board::SQUARE_COUNT) {
-                m_pieces.at(static_cast<int>(square)) = piece;
-
-                // Update bitboards
-                Color color = getPieceColor(piece);
-                PieceType type = getPieceType(piece);
-
-                if (color != Color::NONE && type != PieceType::NONE) {
-                    Bitboard square_bit = squareBB(square);
-                    m_piece_bitboards.at(static_cast<int>(color)).at(static_cast<int>(type) - 1) |=
-                        square_bit;
-                    m_color_bitboards.at(static_cast<int>(color)) |= square_bit;
-                }
-            }
-            ++file;
-        }
-    }
-
-    // 2. Active color
-    iss >> token;
-    m_side_to_move = (token == "w") ? Color::WHITE : Color::BLACK;
-
-    // 3. Castling availability
-    iss >> token;
-    for (char chr : token) {
-        switch (chr) {
-            case 'K':
-                m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_KINGSIDE);
-                break;
-            case 'Q':
-                m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_QUEENSIDE);
-                break;
-            case 'k':
-                m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_KINGSIDE);
-                break;
-            case 'q':
-                m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_QUEENSIDE);
-                break;
-            default: break;
-        }
-    }
-
-    // 4. En passant target square
-    iss >> token;
-    try {
-        m_en_passant_square = (token == "-") ? Square::NONE : stringToSquare(token);
-    }
-    catch (const std::invalid_argument&) {
-        m_en_passant_square = Square::NONE;
-    }
-
-    // 5. Halfmove clock
-    iss >> token;
-    try {
-        m_halfmove_clock = std::stoi(token);
-    }
-    catch (const std::invalid_argument&) {
-        m_halfmove_clock = 0;
-    }
-
-    // 6. Fullmove number
-    iss >> token;
-    try {
-        m_fullmove_number = std::stoi(token);
-    }
-    catch (const std::invalid_argument&) {
-        m_fullmove_number = 1;
-    }
-
+    // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer) - Must be init last
     m_position_hash = computeHash();
 }
 
@@ -158,50 +75,8 @@ auto Position::toFen() const -> std::string
 {
     std::ostringstream oss;
 
-    // 1. Piece placement
-    for (int rank = Constants::Board::LENGTH - 1; rank >= 0; --rank) {
-        int empty_count = 0;
-        for (int file = 0; file < Constants::Board::LENGTH; ++file) {
-            Square sqr = makeSquare(file, rank);
-            Piece piece = pieceAt(sqr);
-
-            if (piece == Piece::NONE) {
-                ++empty_count;
-                continue;
-            }
-            if (empty_count > 0) {
-                oss << empty_count;
-                empty_count = 0;
-            }
-            oss << pieceToChar(piece);
-        }
-
-        if (empty_count > 0) { oss << empty_count; }
-
-        if (rank > 0) { oss << '/'; }
-    }
-
-    // 2. Active color
-    oss << ' ' << (getSideToMove() == Color::WHITE ? 'w' : 'b');
-
-    // 3. Castling availability
-    oss << ' ';
-    if (getCastlingRights() == 0) { oss << '-'; }
-    else {
-        if (hasCastlingRight(CastlingRight::WHITE_KINGSIDE)) { oss << 'K'; }
-        if (hasCastlingRight(CastlingRight::WHITE_QUEENSIDE)) { oss << 'Q'; }
-        if (hasCastlingRight(CastlingRight::BLACK_KINGSIDE)) { oss << 'k'; }
-        if (hasCastlingRight(CastlingRight::BLACK_QUEENSIDE)) { oss << 'q'; }
-    }
-
-    // 4. En passant target square
-    oss << ' ' << squareToString(getEnPassantSquare());
-
-    // 5. Halfmove clock
-    oss << ' ' << getHalfmoveClock();
-
-    // 6. Fullmove number
-    oss << ' ' << getFullmoveNumber();
+    oss << buildFenPiecePlacement();
+    oss << buildFenGameState();
 
     return oss.str();
 }
@@ -209,14 +84,17 @@ auto Position::toFen() const -> std::string
 auto Position::print() const -> void
 {
     std::cout << "+---+---+---+---+---+---+---+---+\n";
-    for (int rank = Constants::Board::LENGTH - 1; rank >= 0; --rank) {
+
+    // Use reverse rank (r_rank) to silence `-altera-id-dependent-backward-branch`
+    for (int r_rank = 0; r_rank < Constants::Board::LENGTH; ++r_rank) {
+        const int RANK = Constants::Board::MAX_RANK - r_rank;
         std::cout << "| ";
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
-            Square sqr = makeSquare(file, rank);
-            Piece piece = pieceAt(sqr);
-            std::cout << pieceToChar(piece) << " | ";
+            const Square SQR = makeSquare(file, RANK);
+            const Piece PIECE = pieceAt(SQR);
+            std::cout << pieceToChar(PIECE) << " | ";
         }
-        std::cout << (rank + 1) << "\n";
+        std::cout << (RANK + 1) << "\n";
         std::cout << "+---+---+---+---+---+---+---+---+\n";
     }
     std::cout << "  a   b   c   d   e   f   g   h\n";
@@ -254,15 +132,181 @@ auto Position::operator==(const Position& other) const -> bool
 
 auto Position::operator!=(const Position& other) const -> bool { return !(*this == other); }
 
+auto Position::parseFenPiecePlacement(std::istringstream& iss) -> void
+{
+    std::string token;
+    if (!(iss >> token)) { return; }
+    int file = 0;
+    int rank = Constants::Board::LENGTH - 1; // FEN starts from the 8th rank
+
+    for (const char CHR : token) {
+        if (CHR == '/') {
+            file = 0;
+            --rank;
+        }
+        else if (CHR >= '1' && CHR <= '8') {
+            file += CHR - '0';
+        }
+        else {
+            const Piece PIECE = charToPiece(CHR);
+            const Square SQUARE = makeSquare(file, rank);
+
+            // Add a bounds check to ensure square is valid
+            if (SQUARE != Square::NONE &&
+                static_cast<int>(SQUARE) < Constants::Board::SQUARE_COUNT) {
+                m_pieces.at(static_cast<int>(SQUARE)) = PIECE;
+
+                // Update bitboards
+                const Color COLOR = getPieceColor(PIECE);
+                const PieceType TYPE = getPieceType(PIECE);
+
+                if (COLOR != Color::NONE && TYPE != PieceType::NONE) {
+                    const Bitboard SQUARE_BIT = squareBB(SQUARE);
+                    m_piece_bitboards.at(static_cast<int>(COLOR)).at(static_cast<int>(TYPE) - 1) |=
+                        SQUARE_BIT;
+                    m_color_bitboards.at(static_cast<int>(COLOR)) |= SQUARE_BIT;
+                }
+            }
+            ++file;
+        }
+    }
+}
+
+auto Position::parseFenGameState(std::istringstream& iss) -> void
+{
+    std::string token;
+
+    // 1. Active color
+    if (iss >> token) { m_side_to_move = (token == "w") ? Color::WHITE : Color::BLACK; }
+
+    // 2. Castling availability
+    if (iss >> token) {
+        for (const char CHR : token) {
+            switch (CHR) {
+                case 'K':
+                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_KINGSIDE);
+                    break;
+                case 'Q':
+                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_QUEENSIDE);
+                    break;
+                case 'k':
+                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_KINGSIDE);
+                    break;
+                case 'q':
+                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_QUEENSIDE);
+                    break;
+                case '-':
+                    // fallthrough
+                default:
+                    // Skip invalid characters
+                    break;
+            }
+        }
+    }
+
+    // 3. En passant target square
+    if (iss >> token) {
+        try {
+            m_en_passant_square = (token == "-") ? Square::NONE : stringToSquare(token);
+        }
+        catch (const std::invalid_argument&) {
+            m_en_passant_square = Square::NONE;
+        }
+    }
+
+    // 4. Halfmove clock
+    if (iss >> token) {
+        try {
+            m_halfmove_clock = std::stoi(token);
+        }
+        catch (const std::invalid_argument&) {
+            m_halfmove_clock = 0;
+        }
+    }
+
+    // 5. Fullmove number
+    if (iss >> token) {
+        try {
+            m_fullmove_number = std::stoi(token);
+        }
+        catch (const std::invalid_argument&) {
+            m_fullmove_number = 1;
+        }
+    }
+}
+
+// Helper method to generate piece placement string
+auto Position::buildFenPiecePlacement() const -> std::string
+{
+    std::ostringstream oss;
+
+    // Use reverse rank (r_rank) to silence `-altera-id-dependent-backward-branch`
+    for (int r_rank = 0; r_rank < Constants::Board::LENGTH; ++r_rank) {
+        const int RANK = Constants::Board::MAX_RANK - r_rank;
+
+        int empty_count = 0;
+        for (int file = 0; file < Constants::Board::LENGTH; ++file) {
+            const Square SQR = makeSquare(file, RANK);
+            const Piece PIECE = pieceAt(SQR);
+
+            if (PIECE == Piece::NONE) {
+                ++empty_count;
+                continue;
+            }
+            if (empty_count > 0) {
+                oss << empty_count;
+                empty_count = 0;
+            }
+            oss << pieceToChar(PIECE);
+        }
+
+        if (empty_count > 0) { oss << empty_count; }
+
+        if (RANK > 0) { oss << '/'; }
+    }
+
+    return oss.str();
+}
+
+// Helper method to generate game state string
+auto Position::buildFenGameState() const -> std::string
+{
+    std::ostringstream oss;
+
+    // 1. Active color
+    oss << ' ' << (getSideToMove() == Color::WHITE ? 'w' : 'b');
+
+    // 2. Castling availability
+    oss << ' ';
+    if (getCastlingRights() == 0) { oss << '-'; }
+    else {
+        if (hasCastlingRight(CastlingRight::WHITE_KINGSIDE)) { oss << 'K'; }
+        if (hasCastlingRight(CastlingRight::WHITE_QUEENSIDE)) { oss << 'Q'; }
+        if (hasCastlingRight(CastlingRight::BLACK_KINGSIDE)) { oss << 'k'; }
+        if (hasCastlingRight(CastlingRight::BLACK_QUEENSIDE)) { oss << 'q'; }
+    }
+
+    // 3. En passant target square
+    oss << ' ' << squareToString(getEnPassantSquare());
+
+    // 4. Halfmove clock
+    oss << ' ' << getHalfmoveClock();
+
+    // 5. Fullmove number
+    oss << ' ' << getFullmoveNumber();
+
+    return oss.str();
+}
+
 auto Position::computeHash() const -> HashKey
 {
     HashKey hash = 0;
 
     // 1. Pieces
     for (int square = 0; square < Constants::Board::SQUARE_COUNT; ++square) {
-        Piece piece = m_pieces.at(square);
-        if (piece != Piece::NONE) {
-            hash ^= Zobrist::getPieceSquareKey(piece, static_cast<Square>(square));
+        const Piece PIECE = m_pieces.at(square);
+        if (PIECE != Piece::NONE) {
+            hash ^= Zobrist::getPieceSquareKey(PIECE, static_cast<Square>(square));
         }
     }
 

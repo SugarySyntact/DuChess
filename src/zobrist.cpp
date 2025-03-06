@@ -1,5 +1,6 @@
 #include "zobrist.h"
 
+#include <cstdint>
 #include <random>
 
 #include "constants.h"
@@ -16,7 +17,7 @@ auto Zobrist::init() -> void
 {
     constexpr uint64_t FIXED_SEED = 0x71E69E733F44B6F4ULL;
 
-    // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c)
+    // NOLINTNEXTLINE(cert-msc51-cpp,cert-msc32-c) - For reproducible testing env
     std::mt19937_64 rng(FIXED_SEED);
 
     for (auto& piece : piece_square_keys) {

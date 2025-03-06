@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "bitboard.h"
+#include "types.h"
 
 using namespace Chess;
 using namespace Util;

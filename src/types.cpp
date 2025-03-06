@@ -1,5 +1,6 @@
 #include "types.h"
 
+#include <cctype>
 #include <stdexcept>
 
 #include "constants.h"
@@ -37,14 +38,14 @@ auto squareToString(Square square) -> std::string
 {
     if (square == Square::NONE) { return "-"; }
 
-    int sqr = static_cast<int>(square);
-    int file = sqr % Constants::Board::LENGTH;
-    int rank = sqr / Constants::Board::LENGTH;
+    const int SQR = static_cast<int>(square);
+    const int FILE = SQR % Constants::Board::LENGTH;
+    const int RANK = SQR / Constants::Board::LENGTH;
 
-    char file_char = static_cast<char>('a' + file);
-    char rank_char = static_cast<char>('1' + rank);
+    const char FILE_CHAR = static_cast<char>('a' + FILE);
+    const char RANK_CHAR = static_cast<char>('1' + RANK);
 
-    return std::string(1, file_char) + std::string(1, rank_char);
+    return std::string(1, FILE_CHAR) + std::string(1, RANK_CHAR);
 }
 
 auto stringToSquare(const std::string& str) -> Square
@@ -52,17 +53,17 @@ auto stringToSquare(const std::string& str) -> Square
     if (str == "-") { return Square::NONE; }
     if (str.size() != 2) { throw std::invalid_argument("Invalid square string: " + str); }
 
-    char file_char = static_cast<char>(std::tolower(str[0]));
-    char rank_char = str[1];
+    const char FILE_CHAR = static_cast<char>(std::tolower(str[0]));
+    const char RANK_CHAR = str[1];
 
-    if (file_char < 'a' || file_char > 'h' || rank_char < '1' || rank_char > '8') {
+    if (FILE_CHAR < 'a' || FILE_CHAR > 'h' || RANK_CHAR < '1' || RANK_CHAR > '8') {
         throw std::invalid_argument("Invalid square string: " + str);
     }
 
-    int file = file_char - 'a';
-    int rank = rank_char - '1';
+    const int FILE = FILE_CHAR - 'a';
+    const int RANK = RANK_CHAR - '1';
 
-    return makeSquare(file, rank);
+    return makeSquare(FILE, RANK);
 }
 
 auto getFile(Square square) -> int

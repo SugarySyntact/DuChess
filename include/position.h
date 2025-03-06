@@ -50,6 +50,11 @@ private:
 
     HashKey m_position_hash;
 
+    auto parseFenPiecePlacement(std::istringstream& iss) -> void;
+    auto parseFenGameState(std::istringstream& iss) -> void;
+    [[nodiscard]] auto buildFenPiecePlacement() const -> std::string;
+    [[nodiscard]] auto buildFenGameState() const -> std::string;
+
     [[nodiscard]] auto computeHash() const -> HashKey;
 };
 
