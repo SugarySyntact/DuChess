@@ -44,7 +44,7 @@ inline auto clearBit(Bitboard& bitb, Square square) -> void
 {
     bitb &= ~(1ULL << static_cast<unsigned>(square));
 }
-inline auto square(Square square) -> Bitboard { return 1ULL << static_cast<unsigned>(square); }
+inline auto squareBB(Square square) -> Bitboard { return 1ULL << static_cast<unsigned>(square); }
 
 inline auto northOne(Bitboard bitb) -> Bitboard
 {

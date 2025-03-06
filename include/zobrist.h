@@ -22,7 +22,7 @@ private:
         piece_square_keys;
     static HashKey side_to_move_key;
     static std::array<HashKey, Constants::Zobrist::CASTLING_COMBINATIONS> castling_keys;
-    static std::array<HashKey, Constants::Board::SQUARE_COUNT + 1> en_passant_keys;
+    static std::array<HashKey, Constants::Board::SQUARE_COUNT_WITH_EMPTY> en_passant_keys;
 };
 
 } // namespace Chess

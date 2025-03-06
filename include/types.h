@@ -2,6 +2,7 @@
 #define CHESS_TYPES_H
 
 #include <cstdint>
+#include <string>
 
 namespace Chess {
 
@@ -52,9 +53,15 @@ auto getPieceColor(Piece piece) -> Color;
 auto getPieceType(Piece piece) -> PieceType;
 auto makePiece(PieceType type, Color color) -> Piece;
 
+auto squareToString(Square square) -> std::string;
+auto stringToSquare(const std::string& str) -> Square;
+
 auto getFile(Square square) -> int;
 auto getRank(Square square) -> int;
 auto makeSquare(int file, int rank) -> Square;
+
+auto pieceToChar(Piece piece) -> char;
+auto charToPiece(char chr) -> Piece;
 
 } // namespace Util
 

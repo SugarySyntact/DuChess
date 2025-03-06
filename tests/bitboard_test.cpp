@@ -31,7 +31,7 @@ TEST_F(BitboardTest, BitOperations)
     EXPECT_TRUE(testBit(bitb, Square::A1));
 
     // Square to bitboard conversion
-    const Bitboard SINGLE = square(Square::H8);
+    const Bitboard SINGLE = squareBB(Square::H8);
     EXPECT_TRUE(testBit(SINGLE, Square::H8));
     EXPECT_EQ(Bitboards::popCount(SINGLE), 1);
 }
@@ -134,25 +134,25 @@ TEST_F(BitboardTest, PredefinedBitboards)
 TEST_F(BitboardTest, ShiftOperations)
 {
     // Test northOne (up one rank)
-    const Bitboard BITB = square(Square::E4);
-    EXPECT_EQ(northOne(BITB), square(Square::E5));
-    EXPECT_EQ(northOne(square(Square::E8)), 0); // Edge of board
+    const Bitboard BITB = squareBB(Square::E4);
+    EXPECT_EQ(northOne(BITB), squareBB(Square::E5));
+    EXPECT_EQ(northOne(squareBB(Square::E8)), 0); // Edge of board
 
     // Test southOne (down one rank)
-    EXPECT_EQ(southOne(BITB), square(Square::E3));
-    EXPECT_EQ(southOne(square(Square::E1)), 0); // Edge of board
+    EXPECT_EQ(southOne(BITB), squareBB(Square::E3));
+    EXPECT_EQ(southOne(squareBB(Square::E1)), 0); // Edge of board
 
     // Test eastOne (right one file)
-    EXPECT_EQ(eastOne(BITB), square(Square::F4));
-    EXPECT_EQ(eastOne(square(Square::H4)), 0); // Edge of board
+    EXPECT_EQ(eastOne(BITB), squareBB(Square::F4));
+    EXPECT_EQ(eastOne(squareBB(Square::H4)), 0); // Edge of board
 
     // Test westOne (left one file)
-    EXPECT_EQ(westOne(BITB), square(Square::D4));
-    EXPECT_EQ(westOne(square(Square::A4)), 0); // Edge of board
+    EXPECT_EQ(westOne(BITB), squareBB(Square::D4));
+    EXPECT_EQ(westOne(squareBB(Square::A4)), 0); // Edge of board
 
     // Test combined shifts
-    EXPECT_EQ(northEastOne(BITB), square(Square::F5));
-    EXPECT_EQ(northWestOne(BITB), square(Square::D5));
-    EXPECT_EQ(southEastOne(BITB), square(Square::F3));
-    EXPECT_EQ(southWestOne(BITB), square(Square::D3));
+    EXPECT_EQ(northEastOne(BITB), squareBB(Square::F5));
+    EXPECT_EQ(northWestOne(BITB), squareBB(Square::D5));
+    EXPECT_EQ(southEastOne(BITB), squareBB(Square::F3));
+    EXPECT_EQ(southWestOne(BITB), squareBB(Square::D3));
 }

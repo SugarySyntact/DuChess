@@ -2,13 +2,15 @@
 
 #include <random>
 
+#include "constants.h"
+
 namespace Chess {
 
 std::array<std::array<HashKey, Constants::Board::SQUARE_COUNT>, Constants::Zobrist::PIECE_COUNT>
     Zobrist::piece_square_keys;
 HashKey Zobrist::side_to_move_key;
 std::array<HashKey, Constants::Zobrist::CASTLING_COMBINATIONS> Zobrist::castling_keys;
-std::array<HashKey, Constants::Board::SQUARE_COUNT + 1> Zobrist::en_passant_keys;
+std::array<HashKey, Constants::Board::SQUARE_COUNT_WITH_EMPTY> Zobrist::en_passant_keys;
 
 auto Zobrist::init() -> void
 {

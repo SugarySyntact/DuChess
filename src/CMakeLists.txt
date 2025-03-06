@@ -2,6 +2,7 @@ add_library(duchess
     types.cpp
     bitboard.cpp
     zobrist.cpp
+    position.cpp
 )
 
 target_include_directories(duchess

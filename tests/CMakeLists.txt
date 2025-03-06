@@ -12,6 +12,7 @@ add_executable(duchess-tests
     types_test.cpp
     bitboard_test.cpp
     zobrist_test.cpp
+    position_test.cpp
 )
 
 target_link_libraries(duchess-tests
