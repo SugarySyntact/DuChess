@@ -1,11 +1,11 @@
 #include "position.h"
 
-#include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
 #include "bitboard.h"
+#include "compiler_macros.h"
 #include "constants.h"
 #include "types.h"
 #include "zobrist.h"
@@ -33,32 +33,31 @@ Position::Position(const std::string& fen)
 auto Position::pieceAt(Square square) const -> Piece
 {
     if (square == Square::NONE) { return Piece::NONE; }
-    return m_pieces.at(static_cast<int>(square));
+    return m_pieces.at(toIdx(square));
 }
 
 auto Position::getPieceBitboard(PieceType type, Color color) const -> Bitboard
 {
     if (type == PieceType::NONE || color == Color::NONE) { return 0; }
-    return m_piece_bitboards.at(static_cast<int>(color)).at(static_cast<int>(type) - 1);
+    return m_piece_bitboards.at(toIdx(color)).at(toIdx(type) - 1);
 }
 
 auto Position::getColorBitboard(Color color) const -> Bitboard
 {
     if (color == Color::NONE) { return 0; }
-    return m_color_bitboards.at(static_cast<int>(color));
+    return m_color_bitboards.at(toIdx(color));
 }
 
 auto Position::getOccupiedBitboard() const -> Bitboard
 {
-    return m_color_bitboards[static_cast<int>(Color::WHITE)] |
-           m_color_bitboards[static_cast<int>(Color::BLACK)];
+    return m_color_bitboards[toIdx(Color::WHITE)] | m_color_bitboards[toIdx(Color::BLACK)];
 }
 
 auto Position::getSideToMove() const -> Color { return m_side_to_move; }
 
 auto Position::hasCastlingRight(CastlingRight right) const -> bool
 {
-    return (m_castling_rights & static_cast<uint8_t>(right)) != 0;
+    return (m_castling_rights & static_cast<CastlingRightsBitField>(right)) != 0;
 }
 
 auto Position::getCastlingRights() const -> CastlingRightsBitField { return m_castling_rights; }
@@ -89,6 +88,7 @@ auto Position::print() const -> void
     for (int r_rank = 0; r_rank < Constants::Board::LENGTH; ++r_rank) {
         const int RANK = Constants::Board::MAX_RANK - r_rank;
         std::cout << "| ";
+        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             const Square SQR = makeSquare(file, RANK);
             const Piece PIECE = pieceAt(SQR);
@@ -117,10 +117,9 @@ auto Position::print() const -> void
 
 auto Position::operator==(const Position& other) const -> bool
 {
-    // Quick check using hash
     if (hash() != other.hash()) { return false; }
 
-    // Full equality check
+    UNROLL_LOOP
     for (int i = 0; i < Constants::Board::SQUARE_COUNT; ++i) {
         if (m_pieces.at(i) != other.m_pieces.at(i)) { return false; }
     }
@@ -137,8 +136,9 @@ auto Position::parseFenPiecePlacement(std::istringstream& iss) -> void
     std::string token;
     if (!(iss >> token)) { return; }
     int file = 0;
-    int rank = Constants::Board::LENGTH - 1; // FEN starts from the 8th rank
+    int rank = Constants::Board::LENGTH - 1; // FEN starts 8th rank
 
+    UNROLL_PARTIAL
     for (const char CHR : token) {
         if (CHR == '/') {
             file = 0;
@@ -151,20 +151,16 @@ auto Position::parseFenPiecePlacement(std::istringstream& iss) -> void
             const Piece PIECE = charToPiece(CHR);
             const Square SQUARE = makeSquare(file, rank);
 
-            // Add a bounds check to ensure square is valid
-            if (SQUARE != Square::NONE &&
-                static_cast<int>(SQUARE) < Constants::Board::SQUARE_COUNT) {
-                m_pieces.at(static_cast<int>(SQUARE)) = PIECE;
+            if (SQUARE != Square::NONE && toIdx(SQUARE) < Constants::Board::SQUARE_COUNT) {
+                m_pieces.at(toIdx(SQUARE)) = PIECE;
 
-                // Update bitboards
                 const Color COLOR = getPieceColor(PIECE);
                 const PieceType TYPE = getPieceType(PIECE);
 
                 if (COLOR != Color::NONE && TYPE != PieceType::NONE) {
                     const Bitboard SQUARE_BIT = squareBB(SQUARE);
-                    m_piece_bitboards.at(static_cast<int>(COLOR)).at(static_cast<int>(TYPE) - 1) |=
-                        SQUARE_BIT;
-                    m_color_bitboards.at(static_cast<int>(COLOR)) |= SQUARE_BIT;
+                    m_piece_bitboards.at(toIdx(COLOR)).at(toIdx(TYPE) - 1) |= SQUARE_BIT;
+                    m_color_bitboards.at(toIdx(COLOR)) |= SQUARE_BIT;
                 }
             }
             ++file;
@@ -181,25 +177,15 @@ auto Position::parseFenGameState(std::istringstream& iss) -> void
 
     // 2. Castling availability
     if (iss >> token) {
+        UNROLL_PARTIAL
         for (const char CHR : token) {
             switch (CHR) {
-                case 'K':
-                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_KINGSIDE);
-                    break;
-                case 'Q':
-                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::WHITE_QUEENSIDE);
-                    break;
-                case 'k':
-                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_KINGSIDE);
-                    break;
-                case 'q':
-                    m_castling_rights |= static_cast<uint8_t>(CastlingRight::BLACK_QUEENSIDE);
-                    break;
-                case '-':
-                    // fallthrough
-                default:
-                    // Skip invalid characters
-                    break;
+                case 'K': m_castling_rights |= toIdx(CastlingRight::WHITE_KINGSIDE); break;
+                case 'Q': m_castling_rights |= toIdx(CastlingRight::WHITE_QUEENSIDE); break;
+                case 'k': m_castling_rights |= toIdx(CastlingRight::BLACK_KINGSIDE); break;
+                case 'q': m_castling_rights |= toIdx(CastlingRight::BLACK_QUEENSIDE); break;
+                case '-': // fallthrough
+                default: break;
             }
         }
     }
@@ -235,7 +221,6 @@ auto Position::parseFenGameState(std::istringstream& iss) -> void
     }
 }
 
-// Helper method to generate piece placement string
 auto Position::buildFenPiecePlacement() const -> std::string
 {
     std::ostringstream oss;
@@ -245,6 +230,7 @@ auto Position::buildFenPiecePlacement() const -> std::string
         const int RANK = Constants::Board::MAX_RANK - r_rank;
 
         int empty_count = 0;
+        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             const Square SQR = makeSquare(file, RANK);
             const Piece PIECE = pieceAt(SQR);
@@ -268,7 +254,6 @@ auto Position::buildFenPiecePlacement() const -> std::string
     return oss.str();
 }
 
-// Helper method to generate game state string
 auto Position::buildFenGameState() const -> std::string
 {
     std::ostringstream oss;
@@ -303,10 +288,11 @@ auto Position::computeHash() const -> HashKey
     HashKey hash = 0;
 
     // 1. Pieces
+    UNROLL_LOOP
     for (int square = 0; square < Constants::Board::SQUARE_COUNT; ++square) {
         const Piece PIECE = m_pieces.at(square);
         if (PIECE != Piece::NONE) {
-            hash ^= Zobrist::getPieceSquareKey(PIECE, static_cast<Square>(square));
+            hash ^= Zobrist::getPieceSquareKey(PIECE, fromIdx<Square>(square));
         }
     }
 
@@ -323,4 +309,5 @@ auto Position::computeHash() const -> HashKey
 
     return hash;
 }
+
 } // namespace Chess

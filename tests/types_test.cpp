@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 
+#include "compiler_macros.h"
 #include "constants.h"
 #include "types.h"
 
 using namespace Chess;
+using namespace Util;
 
 TEST(TypesTest, PieceColorConversion)
 {
@@ -93,8 +95,9 @@ TEST(TypesTest, SquareConversion)
     EXPECT_EQ(Util::stringToSquare("-"), Square::NONE);
 
     // Test round-trip
+    UNROLL_LOOP
     for (int sq = 0; sq < Constants::Board::SQUARE_COUNT; ++sq) {
-        auto square = static_cast<Square>(sq);
+        auto square = fromIdx<Square>(sq);
         EXPECT_EQ(Util::stringToSquare(Util::squareToString(square)), square);
     }
 
@@ -161,14 +164,12 @@ TEST(TypesTest, PieceToChar)
     EXPECT_EQ(Util::pieceToChar(Piece::NONE), '.');
 
     // Test roundtrip conversion
-    for (int piece = 0; piece <= static_cast<int>(Piece::BLACK_KING); ++piece) {
+    UNROLL_LOOP
+    for (int piece = 0; piece <= toIdx(Piece::BLACK_KING); ++piece) {
         // Skip invalid piece values
-        if (piece > static_cast<int>(Piece::WHITE_KING) &&
-            piece < static_cast<int>(Piece::BLACK_PAWN)) {
-            continue;
-        }
+        if (piece > toIdx(Piece::WHITE_KING) && piece < toIdx(Piece::BLACK_PAWN)) { continue; }
 
-        auto piece_cpy = static_cast<Piece>(piece);
+        auto piece_cpy = fromIdx<Piece>(piece);
         EXPECT_EQ(Util::charToPiece(Util::pieceToChar(piece_cpy)), piece_cpy);
     }
 }

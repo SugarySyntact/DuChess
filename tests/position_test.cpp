@@ -2,23 +2,18 @@
 
 #include <gtest/gtest.h>
 
+#include "compiler_macros.h"
 #include "position.h"
 #include "zobrist.h"
 
-namespace Chess {
+using namespace Chess;
 
-// Test fixture for Position class tests
 class PositionTest : public ::testing::Test {
 protected:
-    void SetUp() override
-    {
-        // Initialize Zobrist keys before creating any positions
-        Zobrist::init();
-    }
+    void SetUp() override { Zobrist::init(); }
 };
 
-// Test FEN parsing and conversion
-TEST_F(PositionTest, FENConversion)
+TEST_F(PositionTest, FenConversion)
 {
     const std::vector<std::string> FENS = {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",             // Starting position
@@ -27,18 +22,17 @@ TEST_F(PositionTest, FENConversion)
         "r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",     // Sicilian defense
     };
 
+    UNROLL_PARTIAL
     for (const auto& fen : FENS) {
         Position pos(fen);
         EXPECT_EQ(fen, pos.toFen());
     }
 }
 
-// Test position hash uniqueness for different positions
 TEST_F(PositionTest, HashUniqueness)
 {
     std::unordered_set<HashKey> hashes;
 
-    // Create several distinct positions
     const std::vector<std::string> FENS = {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",         // Starting position
         "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",      // After 1. e4
@@ -47,6 +41,7 @@ TEST_F(PositionTest, HashUniqueness)
         "r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3", // After 2...Nc6
     };
 
+    UNROLL_PARTIAL
     for (const auto& fen : FENS) {
         Position pos(fen);
         HashKey hash = pos.hash();
@@ -57,7 +52,6 @@ TEST_F(PositionTest, HashUniqueness)
     }
 }
 
-// Test that positions differing only in irrelevant details have different hashes
 TEST_F(PositionTest, HashRelevantDifferences)
 {
     const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -75,7 +69,6 @@ TEST_F(PositionTest, HashRelevantDifferences)
     EXPECT_NE(POS1.hash(), POS4.hash());
 }
 
-// Test position equality
 TEST_F(PositionTest, PositionEquality)
 {
     const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -89,8 +82,7 @@ TEST_F(PositionTest, PositionEquality)
     EXPECT_NE(POS1, POS3);
 }
 
-// Test that irrelevant FEN differences don't affect position equality
-TEST_F(PositionTest, IrrelevantFENDifferences)
+TEST_F(PositionTest, IrrelevantFenDifferences)
 {
     // Different move counters shouldn't affect equality check (for now)
     const Position POS1("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
@@ -101,7 +93,6 @@ TEST_F(PositionTest, IrrelevantFENDifferences)
     EXPECT_EQ(POS1, POS2);
 }
 
-// Test position creation from starting position
 TEST_F(PositionTest, DefaultPosition)
 {
     Position pos;
@@ -134,5 +125,3 @@ TEST_F(PositionTest, DefaultPosition)
     // Check hash is non-zero
     EXPECT_NE(0ULL, pos.hash());
 };
-
-} // namespace Chess

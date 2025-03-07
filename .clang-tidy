@@ -4,8 +4,7 @@ Checks: '*,
         -google-*,
         -zircon-*,
         -abseil-*,
-        -llvm*,
-        -altera-unroll-loops'
+        -llvm*'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle: none

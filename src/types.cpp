@@ -10,17 +10,13 @@ namespace Chess::Util {
 auto getPieceColor(Piece piece) -> Color
 {
     if (piece == Piece::NONE) { return Color::NONE; }
-
-    const int COLOR_VALUE = static_cast<int>(piece) / Constants::PIECE_COLOR_OFFSET;
-    return static_cast<Color>(COLOR_VALUE);
+    return fromIdx<Color>(toIdx(piece) / Constants::PIECE_COLOR_OFFSET);
 }
 
 auto getPieceType(Piece piece) -> PieceType
 {
     if (piece == Piece::NONE) { return PieceType::NONE; }
-
-    const int PIECE_VALUE = static_cast<int>(piece) % Constants::PIECE_COLOR_OFFSET;
-    return static_cast<PieceType>(PIECE_VALUE);
+    return fromIdx<PieceType>(toIdx(piece) % Constants::PIECE_COLOR_OFFSET);
 }
 
 auto makePiece(PieceType type, Color color) -> Piece
@@ -28,22 +24,15 @@ auto makePiece(PieceType type, Color color) -> Piece
     if (type == PieceType::NONE) { return Piece::NONE; }
     if (color == Color::NONE) { return Piece::NONE; }
 
-    int piece_value = static_cast<int>(type);
-    if (color == Color::BLACK) { piece_value += Constants::PIECE_COLOR_OFFSET; }
-
-    return static_cast<Piece>(piece_value);
+    return fromIdx<Piece>(toIdx(type) + (toIdx(color) * Constants::PIECE_COLOR_OFFSET));
 }
 
 auto squareToString(Square square) -> std::string
 {
     if (square == Square::NONE) { return "-"; }
 
-    const int SQR = static_cast<int>(square);
-    const int FILE = SQR % Constants::Board::LENGTH;
-    const int RANK = SQR / Constants::Board::LENGTH;
-
-    const char FILE_CHAR = static_cast<char>('a' + FILE);
-    const char RANK_CHAR = static_cast<char>('1' + RANK);
+    const char FILE_CHAR = static_cast<char>('a' + getFile(square));
+    const char RANK_CHAR = static_cast<char>('1' + getRank(square));
 
     return std::string(1, FILE_CHAR) + std::string(1, RANK_CHAR);
 }
@@ -60,22 +49,19 @@ auto stringToSquare(const std::string& str) -> Square
         throw std::invalid_argument("Invalid square string: " + str);
     }
 
-    const int FILE = FILE_CHAR - 'a';
-    const int RANK = RANK_CHAR - '1';
-
-    return makeSquare(FILE, RANK);
+    return makeSquare(FILE_CHAR - 'a', RANK_CHAR - '1');
 }
 
 auto getFile(Square square) -> int
 {
     if (square == Square::NONE) { return Constants::Board::NO_SQUARE; }
-    return static_cast<int>(square) % Constants::Board::LENGTH;
+    return toIdx(square) % Constants::Board::LENGTH;
 }
 
 auto getRank(Square square) -> int
 {
     if (square == Square::NONE) { return Constants::Board::NO_SQUARE; }
-    return static_cast<int>(square) / Constants::Board::LENGTH;
+    return toIdx(square) / Constants::Board::LENGTH;
 }
 
 auto makeSquare(int file, int rank) -> Square
@@ -84,13 +70,12 @@ auto makeSquare(int file, int rank) -> Square
         rank > Constants::Board::LENGTH - 1) {
         return Square::NONE;
     }
-    return static_cast<Square>((rank * Constants::Board::LENGTH) + file);
+    return fromIdx<Square>((rank * Constants::Board::LENGTH) + file);
 }
 
 auto pieceToChar(Piece piece) -> char
 {
     switch (piece) {
-        case Piece::NONE: return '.';
         case Piece::WHITE_PAWN: return 'P';
         case Piece::WHITE_KNIGHT: return 'N';
         case Piece::WHITE_BISHOP: return 'B';
@@ -103,7 +88,8 @@ auto pieceToChar(Piece piece) -> char
         case Piece::BLACK_ROOK: return 'r';
         case Piece::BLACK_QUEEN: return 'q';
         case Piece::BLACK_KING: return 'k';
-        default: return '?';
+        case Piece::NONE:
+        default: return '.';
     }
 }
 

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "bitboard.h"
+#include "compiler_macros.h"
 #include "constants.h"
 #include "types.h"
 
@@ -53,9 +54,8 @@ TEST_F(BitboardTest, LsbMsb)
     EXPECT_EQ(Bitboards::msb(1ULL << TEST_H8), Square::H8);
 
     // Test with multiple bits
-    const Bitboard MULTIPLE = (1ULL << static_cast<unsigned>(Square::A1)) |
-                              (1ULL << static_cast<unsigned>(Square::E4)) |
-                              (1ULL << static_cast<unsigned>(Square::H8));
+    const Bitboard MULTIPLE =
+        (1ULL << toIdx(Square::A1)) | (1ULL << toIdx(Square::E4)) | (1ULL << toIdx(Square::H8));
 
     EXPECT_EQ(Bitboards::lsb(MULTIPLE), Square::A1);
     EXPECT_EQ(Bitboards::msb(MULTIPLE), Square::H8);
@@ -73,9 +73,8 @@ TEST_F(BitboardTest, PopCount)
     EXPECT_EQ(Bitboards::popCount(1ULL << TEST_H8), 1);
 
     // Multiple bits
-    const Bitboard MULTIPLE = (1ULL << static_cast<unsigned>(Square::A1)) |
-                              (1ULL << static_cast<unsigned>(Square::E4)) |
-                              (1ULL << static_cast<unsigned>(Square::H8));
+    const Bitboard MULTIPLE =
+        (1ULL << toIdx(Square::A1)) | (1ULL << toIdx(Square::E4)) | (1ULL << toIdx(Square::H8));
     EXPECT_EQ(Bitboards::popCount(MULTIPLE), 3);
 
     // Full bitboard
@@ -90,15 +89,14 @@ TEST_F(BitboardTest, PopLsb)
     EXPECT_EQ(single, 0ULL);
 
     // Test with multiple bits
-    Bitboard multiple = (1ULL << static_cast<unsigned>(Square::A1)) |
-                        (1ULL << static_cast<unsigned>(Square::E4)) |
-                        (1ULL << static_cast<unsigned>(Square::H8));
+    Bitboard multiple =
+        (1ULL << toIdx(Square::A1)) | (1ULL << toIdx(Square::E4)) | (1ULL << toIdx(Square::H8));
 
     EXPECT_EQ(Bitboards::popLsb(multiple), 1ULL);
     EXPECT_EQ(Bitboards::popCount(multiple), 2);
-    EXPECT_EQ(Bitboards::popLsb(multiple), 1ULL << static_cast<unsigned>(Square::E4));
+    EXPECT_EQ(Bitboards::popLsb(multiple), 1ULL << toIdx(Square::E4));
     EXPECT_EQ(Bitboards::popCount(multiple), 1);
-    EXPECT_EQ(Bitboards::popLsb(multiple), 1ULL << static_cast<unsigned>(Square::H8));
+    EXPECT_EQ(Bitboards::popLsb(multiple), 1ULL << toIdx(Square::H8));
     EXPECT_EQ(multiple, 0ULL);
 }
 
@@ -107,6 +105,7 @@ TEST_F(BitboardTest, PredefinedBitboards)
     // Test file masks
     for (int file = 0; file < Constants::Board::LENGTH; ++file) {
         EXPECT_EQ(Bitboards::popCount(Bitboards::files.at(file)), 8);
+        UNROLL_LOOP
         for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
             EXPECT_TRUE(testBit(Bitboards::files.at(file), makeSquare(file, rank)));
         }
@@ -115,6 +114,7 @@ TEST_F(BitboardTest, PredefinedBitboards)
     // Test rank masks
     for (int rank = 0; rank < Constants::Board::LENGTH; ++rank) {
         EXPECT_EQ(Bitboards::popCount(Bitboards::ranks.at(rank)), 8);
+        UNROLL_LOOP
         for (int file = 0; file < Constants::Board::LENGTH; ++file) {
             EXPECT_TRUE(testBit(Bitboards::ranks.at(rank), makeSquare(file, rank)));
         }

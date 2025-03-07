@@ -6,6 +6,10 @@
 
 namespace Chess {
 
+using Bitboard = uint64_t;
+using HashKey = uint64_t;
+using CastlingRightsBitField = uint8_t;
+
 enum class PieceType : uint8_t { NONE, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING };
 enum class Color : uint8_t { WHITE, BLACK, NONE };
 
@@ -42,12 +46,17 @@ enum class CastlingRight : uint8_t {
     ALL = 15
 };
 
-using Bitboard = uint64_t;
-using HashKey = uint64_t;
-
-using CastlingRightsBitField = uint8_t;
-
 namespace Util {
+
+template <typename EnumType> constexpr auto toIdx(EnumType enm) -> std::underlying_type_t<EnumType>
+{
+    return static_cast<std::underlying_type_t<EnumType>>(enm);
+}
+template <typename EnumType>
+constexpr auto fromIdx(std::underlying_type_t<EnumType> value) -> EnumType
+{
+    return static_cast<EnumType>(value);
+}
 
 auto getPieceColor(Piece piece) -> Color;
 auto getPieceType(Piece piece) -> PieceType;
